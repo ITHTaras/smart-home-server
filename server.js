@@ -1,10 +1,13 @@
 require('dotenv').config();
 
 const express = require("express");
+const cors = require("cors");
 const {MongoClient, ObjectId} = require("mongodb");
 const app = express();
-const port=process.env.PORT|| 3000;
+const port=process.env.PORT|| 8000;
 
+app.use(express.json());
+app.use(cors());
 const mongoClient = new MongoClient(process.env.ATLAS_URI);
 
 app.get("/api/home/", async (req,res)=>{
@@ -101,6 +104,24 @@ app.delete("/api/home/:id", async (req, res)=>{
   } catch (error) {
     console.error('Request failed!', error);
   }
+});
+
+app.put("/api/home/:id", async (req,res)=>{
+  try {
+    await mongoClient.connect();
+    const filter = { _id: new ObjectId(req.params.id) };
+    const update = {
+      $set: {
+        music: req.body.set.music || req.body.music,
+        router: req.body.set.router || req.body.router,
+        rooms: req.body.set.rooms || req.body.rooms,
+      }
+    };
+    const data = await mongoClient.db('homes').collection('states').updateOne(filter, update);       
+    res.send(data);
+} catch (error) {
+    console.error('Request failed!', error);
+}
 });
 
 app.listen(port, () => {
